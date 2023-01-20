@@ -198,12 +198,62 @@ exports.book_create_post = [
 
 // Display book delete form on GET.
 exports.book_delete_get = (req, res) => {
-    res.send('NOT IMPLEMENTED: Book delete GET');
+    async.parallel(
+        {
+            book(callback) {
+                Book.findById(req.params.id).exec(callback);
+            },
+            bookInstanceList(callback) {
+                BookInstance.find({ book: req.params.id }).exec(callback);
+            },
+        },
+        (err, results) => {
+            if (err) return next(err);
+            if (results.book == null) {
+                // No results
+                res.redirect('catalog/books');
+            }
+            // Success, so render
+            res.render('book_delete', {
+                title: 'Delete Book',
+                book: results.book,
+                bookInstanceList: results.bookInstanceList,
+            });
+        }
+    );
 };
 
 // Handle book delete on POST.
 exports.book_delete_post = (req, res) => {
-    res.send('NOT IMPLEMENTED: Book delete POST');
+    async.parallel(
+        {
+            book(callback) {
+                Book.findById(req.body.bookid).exec(callback);
+            },
+            bookInstanceList(callback) {
+                BookInstance.find({ book: req.body.bookid }).exec(callback);
+            },
+        },
+        (err, results) => {
+            if (err) return next(err);
+            // Success
+            if (results.bookInstanceList.length > 0) {
+                // Book has instances. Render is same way as for GET route
+                res.render('book_delete', {
+                    title: 'Delete Book',
+                    book: results.book,
+                    bookInstanceList: results.bookInstanceList,
+                });
+                return;
+            }
+            // Book has no instances. Delete object and redirect to list of books
+            Book.findByIdAndRemove(req.body.bookid, (err) => {
+                if (err) return next(err);
+                // Success - go to book list
+                res.redirect('/catalog/books');
+            });
+        }
+    );
 };
 
 // Display book update form on GET.
@@ -255,7 +305,6 @@ exports.book_update_get = (req, res) => {
 exports.book_update_post = [
     // Convert the genre to an array
     (req, res, next) => {
-        console.log(typeof req.body.genre);
         if (!Array.isArray(req.body.genre)) {
             req.body.genre =
                 typeof req.body.genre === 'undefined' ? [] : [req.body.genre];
