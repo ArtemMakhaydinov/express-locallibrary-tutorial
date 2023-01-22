@@ -57,10 +57,7 @@ exports.bookinstance_create_get = (req, res, next) => {
 // Handle BookInstance create on POST.
 exports.bookinstance_create_post = [
     // Validate and sanitize fields.
-    body('book', 'Book must be specified')
-        .trim()
-        .isLength({ min: 1 })
-        .escape(),
+    body('book', 'Book must be specified').trim().isLength({ min: 1 }).escape(),
     body('imprint', 'Imprint must be specified')
         .trim()
         .isLength({ min: 1 })
@@ -115,12 +112,26 @@ exports.bookinstance_create_post = [
 
 // Display BookInstance delete form on GET.
 exports.bookinstance_delete_get = (req, res) => {
-    res.send('NOT IMPLEMENTED: BookInstance delete GET');
+    BookInstance.findById(req.params.id)
+        .populate('book')
+        .exec((err, bookinstance) => {
+            if (err) return next(err);
+            if (bookinstance == null) {
+                res.redirect('/catalog/bookinstances');
+            }
+            res.render('bookinstance_delete', {
+                title: 'Delete Book Instance',
+                bookinstance,
+            });
+        });
 };
 
 // Handle BookInstance delete on POST.
 exports.bookinstance_delete_post = (req, res) => {
-    res.send('NOT IMPLEMENTED: BookInstance delete POST');
+    BookInstance.findByIdAndRemove(req.body.bookinstanceid).exec((err, bookinstance) => {
+        if (err) return next(err);
+        res.redirect('/catalog/bookinstances');
+    });
 };
 
 // Display BookInstance update form on GET.
