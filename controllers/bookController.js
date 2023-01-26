@@ -3,7 +3,7 @@ const Author = require('../models/author');
 const Genre = require('../models/genre');
 const BookInstance = require('../models/bookinstance');
 const async = require('async');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 
 exports.index = (req, res) => {
     async.parallel(
@@ -197,7 +197,9 @@ exports.book_create_post = [
 ];
 
 // Display book delete form on GET.
-exports.book_delete_get = (req, res) => {
+exports.book_delete_get = (req, res, next) => {
+    param('id').trim().escape();
+
     async.parallel(
         {
             book(callback) {
@@ -257,7 +259,9 @@ exports.book_delete_post = (req, res) => {
 };
 
 // Display book update form on GET.
-exports.book_update_get = (req, res) => {
+exports.book_update_get = (req, res, next) => {
+    param('id').trim().escape();
+
     // Get book, authors and genres for form
     async.parallel(
         {
@@ -313,6 +317,7 @@ exports.book_update_post = [
     },
 
     // Validate and sanitize fields.
+    param('id').trim().escape(),
     body('title', 'Title must not be empty.')
         .trim()
         .isLength({ min: 1 })

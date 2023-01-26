@@ -1,7 +1,7 @@
 const Genre = require('../models/genre');
 const Book = require('../models/book');
 const async = require('async');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const bookinstance = require('../models/bookinstance');
 
 // Display list of all Genre.
@@ -21,6 +21,8 @@ exports.genre_list = (req, res, next) => {
 
 // Display detail page for a specific Genre.
 exports.genre_detail = (req, res, next) => {
+    param('id').trim().escape();
+
     async.parallel(
         {
             genre(callback) {
@@ -103,7 +105,9 @@ exports.genre_create_post = [
 ];
 
 // Display Genre delete form on GET.
-exports.genre_delete_get = (req, res) => {
+exports.genre_delete_get = (req, res, next) => {
+    param('id').trim().escape();
+
     async.parallel(
         {
             genre(callback) {
@@ -162,7 +166,9 @@ exports.genre_delete_post = (req, res) => {
 };
 
 // Display Genre update form on GET.
-exports.genre_update_get = (req, res) => {
+exports.genre_update_get = (req, res, next) => {
+    param('id').trim().escape();
+
     Genre.findById(req.params.id, (err, genre) => {
         if (err) return next(err);
         if (genre == null) {
@@ -179,6 +185,7 @@ exports.genre_update_get = (req, res) => {
 
 // Handle Genre update on POST.
 exports.genre_update_post = [
+    param('id').trim().escape(),
     body('name', 'Genre name must not be empty.')
         .trim()
         .isLength({ min: 1 })

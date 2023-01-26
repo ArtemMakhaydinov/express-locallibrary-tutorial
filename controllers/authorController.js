@@ -1,7 +1,7 @@
 const Author = require('../models/author');
 const Book = require('../models/book');
 const async = require('async');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 
 // Display list of all Authors.
 exports.author_list = function (req, res, next) {
@@ -21,6 +21,8 @@ exports.author_list = function (req, res, next) {
 
 // Display detail page for a specific Author.
 exports.author_detail = (req, res, next) => {
+    param('id').trim().escape();
+
     async.parallel(
         {
             author(callback) {
@@ -115,6 +117,8 @@ exports.author_create_post = [
 
 // Display Author delete form on GET.
 exports.author_delete_get = (req, res, next) => {
+    param('id').trim().escape();
+
     async.parallel(
         {
             author(callback) {
@@ -180,7 +184,9 @@ exports.author_delete_post = (req, res, next) => {
 };
 
 // Display Author update form on GET.
-exports.author_update_get = (req, res) => {
+exports.author_update_get = (req, res, next) => {
+    param('id').trim().escape();
+
     Author.findById(req.params.id, (err, author) => {
         if (err) return next(err);
         if (author == null) {
@@ -197,6 +203,7 @@ exports.author_update_get = (req, res) => {
 
 // Handle Author update on POST.
 exports.author_update_post = [
+    param('id').trim().escape(),
     body('first_name')
         .trim()
         .isLength({ min: 1 })

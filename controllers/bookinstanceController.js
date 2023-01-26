@@ -1,6 +1,6 @@
 const Book = require('../models/book');
 const BookInstance = require('../models/bookinstance');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const async = require('async');
 
 // Display list of all BookInstances.
@@ -21,6 +21,8 @@ exports.bookinstance_list = function (req, res, next) {
 
 // Display detail page for a specific BookInstance.
 exports.bookinstance_detail = (req, res, next) => {
+    param('id').trim().escape();
+
     BookInstance.findById(req.params.id)
         .populate('book')
         .exec((err, bookinstance) => {
@@ -112,7 +114,9 @@ exports.bookinstance_create_post = [
 ];
 
 // Display BookInstance delete form on GET.
-exports.bookinstance_delete_get = (req, res) => {
+exports.bookinstance_delete_get = (req, res, next) => {
+    param('id').trim().escape();
+
     BookInstance.findById(req.params.id)
         .populate('book')
         .exec((err, bookinstance) => {
@@ -138,7 +142,9 @@ exports.bookinstance_delete_post = (req, res) => {
 };
 
 // Display BookInstance update form on GET.
-exports.bookinstance_update_get = (req, res) => {
+exports.bookinstance_update_get = (req, res, next) => {
+    param('id').trim().escape();
+
     async.parallel(
         {
             bookinstance(callback) {
@@ -168,6 +174,7 @@ exports.bookinstance_update_get = (req, res) => {
 
 // Handle bookinstance update on POST.
 exports.bookinstance_update_post = [
+    param('id').trim().escape(),
     body('book', 'Book must be specified').trim().isLength({ min: 1 }).escape(),
     body('imprint', 'Imprint must be specified')
         .trim()
