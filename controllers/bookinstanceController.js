@@ -2,6 +2,7 @@ const Book = require('../models/book');
 const BookInstance = require('../models/bookinstance');
 const { body, param, validationResult } = require('express-validator');
 const async = require('async');
+const debug = require('debug')('bookinstance');
 
 // Display list of all BookInstances.
 exports.bookinstance_list = function (req, res, next) {
@@ -9,6 +10,7 @@ exports.bookinstance_list = function (req, res, next) {
         .populate('book')
         .exec(function (err, list_bookinstances) {
             if (err) {
+                debug(`list error: ${err}`);
                 return next(err);
             }
             // Successful, so render
@@ -27,6 +29,7 @@ exports.bookinstance_detail = (req, res, next) => {
         .populate('book')
         .exec((err, bookinstance) => {
             if (err) {
+                debug(`detail error: ${err}`);
                 return next(err);
             }
             if (bookinstance == null) {
@@ -47,6 +50,7 @@ exports.bookinstance_detail = (req, res, next) => {
 exports.bookinstance_create_get = (req, res, next) => {
     Book.find({}, 'title').exec((err, books) => {
         if (err) {
+            debug(`create_get error: ${err}`);
             return next(err);
         }
         // Successful, so render.
@@ -88,6 +92,7 @@ exports.bookinstance_create_post = [
             // There are errors. Render form again with sanitized values and error messages.
             Book.find({}, 'title').exec(function (err, books) {
                 if (err) {
+                    debug(`create_post error: ${err}`);
                     return next(err);
                 }
                 // Successful, so render.
@@ -105,6 +110,7 @@ exports.bookinstance_create_post = [
         // Data from form is valid.
         bookinstance.save((err) => {
             if (err) {
+                debug(`create_post error: ${err}`);
                 return next(err);
             }
             // Successful: redirect to new record.
@@ -120,7 +126,10 @@ exports.bookinstance_delete_get = (req, res, next) => {
     BookInstance.findById(req.params.id)
         .populate('book')
         .exec((err, bookinstance) => {
-            if (err) return next(err);
+            if (err) {
+                debug(`delete_get error: ${err}`);
+                return next(err);
+            }
             if (bookinstance == null) {
                 res.redirect('/catalog/bookinstances');
             }
@@ -135,7 +144,10 @@ exports.bookinstance_delete_get = (req, res, next) => {
 exports.bookinstance_delete_post = (req, res) => {
     BookInstance.findByIdAndRemove(req.body.bookinstanceid).exec(
         (err, bookinstance) => {
-            if (err) return next(err);
+            if (err) {
+                debug(`delete_post error: ${err}`);
+                return next(err);
+            }
             res.redirect('/catalog/bookinstances');
         }
     );
@@ -155,7 +167,10 @@ exports.bookinstance_update_get = (req, res, next) => {
             },
         },
         (err, results) => {
-            if (err) return next(err);
+            if (err) {
+                debug(`update_get error: ${err}`);
+                return next(err);
+            }
             if (results.bookinstance == null) {
                 const err = new Error('Book instance not found.');
                 error.status = 404;
@@ -199,7 +214,10 @@ exports.bookinstance_update_post = [
 
         if (!errors.isEmpty()) {
             Book.find({}, 'title').exec((err, books) => {
-                if (err) return next(err);
+                if (err) {
+                    debug(`update_post error: ${err}`);
+                    return next(err);
+                }
                 res.render('bookinstance_form', {
                     title: 'Update Book Instance',
                     bookinstance,
@@ -212,7 +230,10 @@ exports.bookinstance_update_post = [
 
         BookInstance.findByIdAndUpdate(req.params.id, bookinstance, {}).exec(
             (err, updatedBookinstance) => {
-                if (err) return next(err);
+                if (err) {
+                    debug(`update_post error: ${err}`);
+                    return next(err);
+                }
                 res.redirect(updatedBookinstance.url);
             }
         );

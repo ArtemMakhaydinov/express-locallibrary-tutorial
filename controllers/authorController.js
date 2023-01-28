@@ -2,6 +2,7 @@ const Author = require('../models/author');
 const Book = require('../models/book');
 const async = require('async');
 const { body, param, validationResult } = require('express-validator');
+const debug = require('debug')('author');
 
 // Display list of all Authors.
 exports.author_list = function (req, res, next) {
@@ -9,6 +10,7 @@ exports.author_list = function (req, res, next) {
         .sort([['family_name', 'ascending']])
         .exec(function (err, list_authors) {
             if (err) {
+                debug(`list error: ${err}`);
                 return next(err);
             }
             //Successful, so render
@@ -37,6 +39,7 @@ exports.author_detail = (req, res, next) => {
         (err, results) => {
             if (err) {
                 // Error in API usage.
+                debug(`detail error: ${err}`);
                 return next(err);
             }
             if (results.author == null) {
@@ -108,7 +111,10 @@ exports.author_create_post = [
             date_of_death: req.body.date_of_death,
         });
         author.save((err) => {
-            if (err) return next(err);
+            if (err) {
+                debug(`create_post error: ${err}`);
+                return next(err);
+            }
             // Successful - redirect to new author record
             res.redirect(author.url);
         });
@@ -130,6 +136,7 @@ exports.author_delete_get = (req, res, next) => {
         },
         (err, results) => {
             if (err) {
+                debug(`delete_get error: ${err}`);
                 return next(err);
             }
             if (results.author == null) {
@@ -159,6 +166,7 @@ exports.author_delete_post = (req, res, next) => {
         },
         (err, results) => {
             if (err) {
+                debug(`delete_post error: ${err}`);
                 return next(err);
             }
             // Success
@@ -174,6 +182,7 @@ exports.author_delete_post = (req, res, next) => {
             // Author has no books. Delete object and redirect to list of authors
             Author.findByIdAndRemove(req.body.authorid, (err) => {
                 if (err) {
+                    debug(`delete_post error: ${err}`);
                     return next(err);
                 }
                 // Success - go to author list
@@ -188,7 +197,10 @@ exports.author_update_get = (req, res, next) => {
     param('id').trim().escape();
 
     Author.findById(req.params.id, (err, author) => {
-        if (err) return next(err);
+        if (err) {
+            debug(`update_get error: ${err}`);
+            return next(err);
+        }
         if (author == null) {
             const err = new Error('Author not found');
             error.status = 404;
@@ -252,7 +264,10 @@ exports.author_update_post = [
             author,
             {},
             (err, updatedAuthor) => {
-                if (err) return next(err);
+                if (err) {
+                    debug(`update_post error: ${err}`);
+                    return next(err);
+                }
                 res.redirect(updatedAuthor.url);
             }
         );

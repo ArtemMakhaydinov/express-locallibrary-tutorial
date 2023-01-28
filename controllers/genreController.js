@@ -2,7 +2,7 @@ const Genre = require('../models/genre');
 const Book = require('../models/book');
 const async = require('async');
 const { body, param, validationResult } = require('express-validator');
-const bookinstance = require('../models/bookinstance');
+const debug = require('debug')('genre');
 
 // Display list of all Genre.
 exports.genre_list = (req, res, next) => {
@@ -10,6 +10,7 @@ exports.genre_list = (req, res, next) => {
         .sort([['name', 'ascending']])
         .exec(function (err, list_genres) {
             if (err) {
+                debug(`list error: ${err}`);
                 return next(err);
             }
             res.render('genre_list', {
@@ -35,6 +36,7 @@ exports.genre_detail = (req, res, next) => {
         },
         (err, results) => {
             if (err) {
+                debug(`detail error: ${err}`);
                 return next(err);
             }
             if (results.genre == null) {
@@ -84,6 +86,7 @@ exports.genre_create_post = [
             // Check if Genre with same name already exists.
             Genre.findOne({ name: req.body.name }).exec((err, found_genre) => {
                 if (err) {
+                    debug(`create_post error: ${err}`);
                     return next(err);
                 }
 
@@ -93,6 +96,7 @@ exports.genre_create_post = [
                 } else {
                     genre.save((err) => {
                         if (err) {
+                            debug(`create_post error: ${err}`);
                             return next(err);
                         }
                         // Genre saved. Redirect to genre detail page.
@@ -118,7 +122,10 @@ exports.genre_delete_get = (req, res, next) => {
             },
         },
         (err, results) => {
-            if (err) return next(err);
+            if (err) {
+                debug(`delete_get error: ${err}`);
+                return next(err);
+            }
             if (results.genre == null) {
                 // No results
                 res.redirect('/catalog/genres');
@@ -145,7 +152,10 @@ exports.genre_delete_post = (req, res) => {
             },
         },
         (err, results) => {
-            if (err) return next(err);
+            if (err) {
+                debug(`delete_post error: ${err}`);
+                return next(err);
+            }
             // Success
             if (results.genre_books.length > 0) {
                 // Genre has books. Render is the same way as for GET route
@@ -158,7 +168,10 @@ exports.genre_delete_post = (req, res) => {
             }
             // Genre has no books. Delete object and redirect to list of genres
             Genre.findByIdAndRemove(req.body.genreid, (err) => {
-                if (err) return next(err);
+                if (err) {
+                    debug(`delete_post error: ${err}`);
+                    return next(err);
+                }
                 res.redirect('/catalog/genres');
             });
         }
@@ -170,7 +183,10 @@ exports.genre_update_get = (req, res, next) => {
     param('id').trim().escape();
 
     Genre.findById(req.params.id, (err, genre) => {
-        if (err) return next(err);
+        if (err) {
+            debug(`update_get error: ${err}`);
+            return next(err);
+        }
         if (genre == null) {
             const err = new Error('Genre not found.');
             err.status = 404;
@@ -208,9 +224,17 @@ exports.genre_update_post = [
             return;
         }
 
-        Genre.findByIdAndUpdate(req.params.id, genre, {}, (err, updatedGenre) => {
-            if (err) return next(err);
-            res.redirect(updatedGenre.url);
-        });
+        Genre.findByIdAndUpdate(
+            req.params.id,
+            genre,
+            {},
+            (err, updatedGenre) => {
+                if (err) {
+                    debug(`update_post error: ${err}`);
+                    return next(err);
+                }
+                res.redirect(updatedGenre.url);
+            }
+        );
     },
 ];
